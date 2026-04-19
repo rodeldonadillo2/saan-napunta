@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="fil">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="Saan Napunta? — I-track ang budget, opisyal, at proyekto ng Imus City, Cavite. Libre para sa lahat ng Imuseño.">
+  <meta name="theme-color" content="#0038A8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Saan Napunta?">
+
+  <!-- Open Graph (for sharing on Facebook/Messenger) -->
+  <meta property="og:title" content="Saan Napunta? — Imus City Budget Tracker">
+  <meta property="og:description" content="I-track ang budget ng Imus City hanggang centavo. Libre. Walang ads.">
+  <meta property="og:image" content="icons/icon-512.png">
+  <meta property="og:type" content="website">
+
+  <title>Saan Napunta? · Imus City</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ph-blue: #0038A8;
+      --ph-red:  #CE1126;
+      --ph-yellow: #FCD116;
+      --white: #ffffff;
+      --ink: #1a1a1a;
+      --muted: #6b7280;
+      --surface: #ffffff;
+      --base: #f5f5f4;
+      --border: rgba(0,0,0,0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #f0f0f0;
+        --muted: #9ca3af;
+        --surface: #1c1c1e;
+        --base: #2c2c2e;
+        --border: rgba(255,255,255,0.1);
+      }
+    }
+
+    html, body {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--base);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── LAYOUT ── */
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--surface);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--ph-blue);
+      padding: 1.5rem 1.25rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      right: -50px; top: -50px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(252,209,22,0.07);
+      pointer-events: none;
+    }
+    .flag-bar {
+      display: flex;
+      height: 5px;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      gap: 2px;
+    }
+    .fb1 { background: var(--ph-blue); flex: 1; }
+    .fb2 { background: var(--ph-red);  flex: 1; }
+    .fb3 { background: var(--ph-yellow); width: 24px; }
+    .hero-eye  { font-size: 10px; letter-spacing: .08em; color: rgba(255,255,255,.55); text-transform: uppercase; margin-bottom: .2rem; }
+    .hero-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; line-height: 1.15; margin-bottom: .15rem; }
+    .hero-sub  { font-size: 12px; color: rgba(255,255,255,.65); margin-bottom: 1rem; }
+    .hero-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip { padding: .25rem .7rem; border-radius: 20px; font-size: 11px; font-weight: 500; border: 0.5px solid rgba(255,255,255,.2); color: rgba(255,255,255,.9); }
+    .chip-b { background: rgba(0,56,168,.5); }
+    .chip-r { background: rgba(206,17,38,.5); }
+    .chip-y { background: rgba(252,209,22,.25); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .tab {
+      flex: 1;
+      padding: .65rem .1rem;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2.5px solid transparent;
+      transition: all .18s;
+      text-align: center;
+      line-height: 1.3;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .tab.on { color: var(--ph-blue); border-bottom-color: var(--ph-blue); }
+
+    /* ── SECTIONS ── */
+    .sec { display: none; padding: 1.1rem 1.1rem 4rem; }
+    .sec.on { display: block; }
+    .sec-h { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: .2rem; }
+    .sec-s { font-size: 12px; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+
+    /* ── OFFICIALS ── */
+    .hero-off {
+      border-radius: 14px;
+      border: 0.5px solid var(--border);
+      background: var(--surface);
+      margin-bottom: .85rem;
+      overflow: hidden;
+    }
+    .hero-off-top {
+      padding: 1rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .hero-photo {
+      width: 72px; height: 86px;
+      border-radius: 10px;
+      object-fit: cover;
+      object-position: top;
+      border: 2.5px solid rgba(255,255,255,.35);
+      flex-shrink: 0;
+      background: rgba(255,255,255,.1);
+    }
+    .hero-photo-fallback {
+      width: 72px; height: 72px;
+      border-radius: 10px;
+      border: 2.5px solid rgba(255,255,255,.3);
+      flex-shrink: 0;
+      background: rgba(255,255,255,.15);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 500;
+      color: #fff;
+    }
+    .hero-off-name { font-family: 'DM Serif Display', serif; font-size: 16px; color: #fff; line-height: 1.2; margin-bottom: .15rem; }
+    .hero-off-role { font-size: 11px; color: rgba(255,255,255,.7); line-height: 1.4; }
+    .hero-off-body { padding: .85rem 1.1rem; }
+    .hero-off-agenda { font-size: 11px; color: var(--muted); line-height: 1.7; }
+    .off-badge { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 4px; margin-bottom: .5rem; }
+    .bd-blue   { background: #E6F1FB; color: #0C447C; }
+    .bd-red    { background: #FCEBEB; color: #791F1F; }
+    .bd-green  { background: #EAF3DE; color: #27500A; }
+    .bd-yellow { background: #FAEEDA; color: #633806; }
+    .bd-purple { background: #EEEDFE; color: #3C3489; }
+    .bd-gray   { background: #F1EFE8; color: #5F5E5A; }
+
+    .clabel { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 1rem 0 .6rem; }
+    .cg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .cc { border-radius: 10px; border: 0.5px solid var(--border); background: var(--surface); overflow: hidden; }
+    .cc-photo-wrap { padding: .75rem .75rem .4rem; display: flex; justify-content: center; }
+    .cc-photo {
+      width: 60px; height: 72px;
+      border-radius: 7px;
+      object-fit: cover;
+      object-position: top;
+      border: 1.5px solid rgba(255,255,255,.3);
+    }
+    .cc-photo-fallback {
+      width: 60px; height: 72px;
+      border-radius: 7px;
+      border: 1.5px solid rgba(255,255,255,.2);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+    }
+    .cc-info { padding: .5rem .7rem .7rem; }
+    .cc-name { font-size: 11px; font-weight: 500; line-height: 1.3; }
+    .cc-committee { font-size: 9px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    .slabel { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 1.1rem 0 .5rem; }
+    .off-card { display: flex; align-items: center; gap: 11px; padding: .85rem; border-radius: 12px; border: 0.5px solid var(--border); background: var(--surface); margin-bottom: .6rem; }
+    .av { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 500; flex-shrink: 0; font-size: 10px; width: 40px; height: 40px; }
+    .av-blue   { background: #E6F1FB; color: #0C447C; }
+    .av-red    { background: #FCEBEB; color: #791F1F; }
+    .av-green  { background: #EAF3DE; color: #27500A; }
+    .av-yellow { background: #FAEEDA; color: #633806; }
+    .av-purple { background: #EEEDFE; color: #3C3489; }
+    .off-name { font-size: 13px; font-weight: 500; line-height: 1.3; }
+    .off-role { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .off-badge2 { font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+    /* ── BUDGET ── */
+    .total-band { background: var(--ph-blue); border-radius: 13px; padding: 1.1rem; margin-bottom: .9rem; color: #fff; }
+    .tb-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: rgba(255,255,255,.6); }
+    .tb-num   { font-family: 'DM Serif Display', serif; font-size: 26px; margin: .2rem 0; }
+    .tb-sub   { font-size: 11px; color: rgba(255,255,255,.6); }
+
+    .dept-card { border-radius: 12px; border: 0.5px solid var(--border); background: var(--surface); margin-bottom: .6rem; overflow: hidden; transition: border-color .2s; }
+    .dept-card.open { border-color: var(--ac, #0038A8); }
+    .dept-hd { display: flex; align-items: center; gap: 10px; padding: .85rem .95rem; cursor: pointer; user-select: none; }
+    .d-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .d-main { flex: 1; min-width: 0; }
+    .d-name  { font-size: 13px; font-weight: 500; line-height: 1.3; }
+    .d-alloc { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .d-bar-wrap { height: 3px; border-radius: 2px; background: var(--border); margin-top: 6px; }
+    .d-bar { height: 3px; border-radius: 2px; }
+    .d-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .d-pct { font-size: 14px; font-weight: 500; }
+    .chev { font-size: 9px; transition: transform .22s; }
+    .dept-card.open .chev { transform: rotate(180deg); }
+    .dept-body { display: none; border-top: 0.5px solid var(--border); padding: .75rem 1rem .9rem; }
+    .dept-card.open .dept-body { display: block; }
+    .sub-hd { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: .6rem; font-weight: 500; }
+    .li { display: flex; align-items: flex-start; justify-content: space-between; padding: .5rem 0; border-bottom: 0.5px solid var(--border); gap: 10px; }
+    .li:last-of-type { border-bottom: none; padding-bottom: 0; }
+    .li-l { min-width: 0; flex: 1; }
+    .li-name { font-size: 12px; line-height: 1.4; }
+    .li-tag  { font-size: 9px; padding: 1px 6px; border-radius: 4px; margin-top: 3px; display: inline-block; }
+    .li-mini-bar-wrap { height: 2px; border-radius: 1px; background: var(--border); margin-top: 5px; max-width: 130px; }
+    .li-mini-bar { height: 2px; border-radius: 1px; }
+    .li-r { text-align: right; flex-shrink: 0; }
+    .li-amt  { font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .li-meta { font-size: 9px; color: var(--muted); margin-top: 1px; white-space: nowrap; }
+    .d-total-row { display: flex; justify-content: space-between; align-items: center; margin-top: .8rem; padding: .6rem .85rem; border-radius: 8px; }
+    .per-cap-row { display: flex; justify-content: space-between; align-items: center; margin-top: .4rem; padding: .45rem .85rem; border-radius: 7px; background: var(--base); }
+    .budget-note { font-size: 10px; color: var(--muted); margin-top: .75rem; line-height: 1.6; padding: .7rem .9rem; border-radius: 9px; background: var(--base); }
+
+    /* ── BARANGAY ── */
+    .brgy-search { width: 100%; padding: .65rem .9rem; border-radius: 9px; border: 0.5px solid var(--border); background: var(--surface); font-size: 13px; color: var(--ink); margin-bottom: .5rem; font-family: 'DM Sans', sans-serif; }
+    .brgy-count  { font-size: 11px; color: var(--muted); margin-bottom: .5rem; text-align: right; }
+    .brgy-list   { display: flex; flex-direction: column; gap: 6px; }
+    .bi { padding: .75rem .95rem; border-radius: 10px; border: 0.5px solid var(--border); background: var(--surface); cursor: pointer; transition: border-color .15s; }
+    .bi:hover { border-color: var(--ph-blue); }
+    .bi-top { display: flex; align-items: center; justify-content: space-between; }
+    .bi-name { font-size: 13px; font-weight: 500; }
+    .bi-fund { font-size: 13px; font-weight: 500; color: var(--ph-blue); }
+    .bi-pop  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .bi-row  { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+    .bi-status { font-size: 9px; padding: 2px 8px; border-radius: 4px; }
+    .st-ok  { background: #EAF3DE; color: #27500A; }
+    .st-mid { background: #FAEEDA; color: #633806; }
+
+    /* ── FLAG IT ── */
+    .flag-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+    .fstat   { background: var(--base); border-radius: 10px; padding: .75rem; text-align: center; }
+    .fstat-n { font-size: 20px; font-weight: 500; }
+    .fstat-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .flag-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: .85rem 1rem; border-radius: 11px; border: 0.5px solid var(--border); background: var(--surface); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--ink); text-align: left; margin-bottom: .6rem; font-family: 'DM Sans', sans-serif; transition: background .15s; }
+    .flag-btn:hover { background: var(--base); }
+    .fdot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .dot-r  { background: var(--ph-red); }
+    .dot-y  { background: var(--ph-yellow); border: 0.5px solid #ccc; }
+    .dot-b  { background: var(--ph-blue); }
+    .fcnt   { margin-left: auto; font-size: 10px; color: var(--muted); font-weight: 400; }
+    .rep-box { border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem; margin-top: .9rem; }
+    .rep-title { font-size: 13px; font-weight: 500; margin-bottom: .75rem; }
+    .rep-label { font-size: 11px; color: var(--muted); margin-bottom: .35rem; margin-top: .65rem; }
+    .rep-label:first-of-type { margin-top: 0; }
+    .rep-sel, .rep-inp { width: 100%; padding: .6rem .9rem; border: 0.5px solid var(--border); border-radius: 9px; font-size: 13px; background: var(--surface); color: var(--ink); font-family: 'DM Sans', sans-serif; }
+    .rep-inp { resize: vertical; min-height: 80px; }
+    .sub-btn { width: 100%; padding: .75rem; border-radius: 9px; background: var(--ph-blue); color: #fff; border: none; font-size: 13px; font-weight: 500; cursor: pointer; margin-top: .75rem; font-family: 'DM Sans', sans-serif; }
+    .sub-btn:hover { opacity: .88; }
+    .ok-msg  { background: #EAF3DE; color: #27500A; border-radius: 9px; padding: .8rem 1rem; font-size: 12px; margin-top: .7rem; display: none; line-height: 1.5; }
+
+    /* ── GET APP ── */
+    .app-hero  { background: var(--ph-blue); border-radius: 13px; padding: 1.1rem; margin-bottom: .9rem; color: #fff; }
+    .app-h     { font-family: 'DM Serif Display', serif; font-size: 21px; margin-bottom: .2rem; }
+    .app-s     { font-size: 12px; color: rgba(255,255,255,.65); }
+    .step-list { counter-reset: steps; list-style: none; margin-bottom: 1rem; }
+    .step-list li { counter-increment: steps; display: flex; gap: 12px; align-items: flex-start; padding: .65rem 0; border-bottom: 0.5px solid var(--border); font-size: 13px; line-height: 1.5; }
+    .step-list li:last-child { border-bottom: none; }
+    .step-list li::before { content: counter(steps); background: var(--ph-blue); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+    .step-code { background: var(--base); border-radius: 7px; padding: .6rem .85rem; font-size: 12px; font-family: monospace; color: var(--ph-blue); margin-top: .4rem; word-break: break-all; }
+    .roadmap   { border-radius: 12px; border: 0.5px solid var(--border); background: var(--surface); overflow: hidden; margin-bottom: .9rem; }
+    .rm-head   { background: var(--ph-red); padding: .7rem 1rem; color: #fff; font-size: 12px; font-weight: 500; }
+    .rm-item   { display: flex; align-items: flex-start; gap: 10px; padding: .7rem 1rem; border-bottom: 0.5px solid var(--border); }
+    .rm-item:last-child { border-bottom: none; }
+    .rm-phase  { font-size: 9px; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+    .ph-done { background: #EAF3DE; color: #27500A; }
+    .ph-now  { background: #E6F1FB; color: #0C447C; }
+    .ph-next { background: #F1EFE8; color: #5F5E5A; }
+    .rm-text { font-size: 12px; line-height: 1.35; }
+    .rm-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .disc    { font-size: 10px; color: var(--muted); line-height: 1.6; padding: .75rem .9rem; border-radius: 9px; background: var(--base); }
+
+    /* ── INSTALL BANNER ── */
+    #install-banner { display: none; position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--ph-blue); color: #fff; padding: .85rem 1.1rem; z-index: 100; align-items: center; justify-content: space-between; gap: 10px; }
+    #install-banner p { font-size: 12px; line-height: 1.4; }
+    #install-banner button { background: var(--ph-yellow); color: var(--ph-blue); border: none; border-radius: 7px; padding: .45rem .9rem; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+    #install-banner .dismiss { background: transparent; color: rgba(255,255,255,.7); font-size: 18px; padding: 0 .25rem; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="flag-bar"><div class="fb1"></div><div class="fb2"></div><div class="fb3"></div></div>
+    <p class="hero-eye">City of Imus, Cavite · Open Government</p>
+    <h1 class="hero-title">Saan Napunta?</h1>
+    <p class="hero-sub">I-track ang budget, opisyal, at proyekto ng iyong lungsod — libre para sa lahat.</p>
+    <div class="hero-chips">
+      <span class="chip chip-b">₱1.82B Budget</span>
+      <span class="chip chip-r">97 Barangays</span>
+      <span class="chip chip-y">481K Imuseños</span>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <nav class="tabs" role="tablist">
+    <button class="tab on" role="tab" onclick="showTab('officials',this)">Officials</button>
+    <button class="tab"    role="tab" onclick="showTab('budget',this)">Budget</button>
+    <button class="tab"    role="tab" onclick="showTab('barangay',this)">Barangay</button>
+    <button class="tab"    role="tab" onclick="showTab('report',this)">Flag It</button>
+    <button class="tab"    role="tab" onclick="showTab('download',this)">Get App</button>
+  </nav>
+
+  <!-- ══ OFFICIALS ══ -->
+  <section id="sec-officials" class="sec on" role="tabpanel">
+    <h2 class="sec-h">City Officials</h2>
+    <p class="sec-s">Elected & appointed officials ng Imus City, 2025–2028 term.</p>
+
+    <!-- MAYOR -->
+    <div class="hero-off">
+      <div class="hero-off-top" style="background:var(--ph-blue)">
+        <img class="hero-photo" id="photo-mayor"
+             src="images/officials/mayor-aa.jpg"
+             alt="Mayor Alex Advincula"
+             onerror="this.style.display='none';document.getElementById('fb-mayor').style.display='flex'">
+        <div class="hero-photo-fallback" id="fb-mayor">AA</div>
+        <div>
+          <div class="hero-off-name">Mayor Alex "AA" L. Advincula</div>
+          <div class="hero-off-role">City Mayor · Chief Executive · 2nd Term (2025–2028)</div>
+        </div>
+      </div>
+      <div class="hero-off-body">
+        <span class="off-badge bd-blue">Executive Office</span>
+        <div class="hero-off-agenda">
+          Eight-Point Agenda: Health · Education · Infrastructure Development · Peace &amp; Order ·
+          Economic Development · Good Governance · Social Services · Environment &amp; DRRR
+        </div>
+      </div>
+    </div>
+
+    <!-- VICE MAYOR -->
+    <div class="hero-off">
+      <div class="hero-off-top" style="background:var(--ph-red)">
+        <img class="hero-photo" id="photo-vm"
+             src="images/officials/vm-saquilayan.jpg"
+             alt="Vice Mayor Homer Saquilayan"
+             onerror="this.style.display='none';document.getElementById('fb-vm').style.display='flex'">
+        <div class="hero-photo-fallback" id="fb-vm">HS</div>
+        <div>
+          <div class="hero-off-name">Vice Mayor Homer T. Saquilayan</div>
+          <div class="hero-off-role">Presiding Officer · Sangguniang Panlungsod</div>
+        </div>
+      </div>
+      <div class="hero-off-body">
+        <span class="off-badge bd-red">Legislative</span>
+        <div class="hero-off-agenda">
+          Civil Engineer · Former Mayor of Imus (2001, 2004, 2010) ·
+          Ad-hoc Committee on Good Governance, Public Ethics &amp; Accountability
+        </div>
+      </div>
+    </div>
+
+    <!-- COUNCILORS -->
+    <p class="clabel">Sangguniang Panlungsod — City Council</p>
+    <div class="cg" id="councilor-grid"></div>
+
+    <!-- DEPARTMENTS -->
+    <p class="slabel">Department Heads</p>
+    <div class="off-card">
+      <div class="av av-blue">CEO</div>
+      <div><div class="off-name">City Engineering Office</div><div class="off-role">Infrastructure, Roads &amp; Public Works</div><span class="off-badge2 bd-blue">Infrastructure</span></div>
+    </div>
+    <div class="off-card">
+      <div class="av av-red">CHO</div>
+      <div><div class="off-name">City Health Office</div><div class="off-role">Public Health, Clinics &amp; RHU</div><span class="off-badge2 bd-red">Health</span></div>
+    </div>
+    <div class="off-card">
+      <div class="av av-green">CSWD</div>
+      <div><div class="off-name">City Social Welfare &amp; Dev't Office</div><div class="off-role">4Ps, Livelihood, Senior Citizens, PWD</div><span class="off-badge2 bd-green">Social</span></div>
+    </div>
+    <div class="off-card">
+      <div class="av av-yellow">CEdO</div>
+      <div><div class="off-name">City Education Office</div><div class="off-role">Scholarships &amp; Learner Support</div><span class="off-badge2 bd-yellow">Education</span></div>
+    </div>
+    <div class="off-card">
+      <div class="av av-purple">DRRM</div>
+      <div><div class="off-name">City DRRM Office</div><div class="off-role">Disaster Risk Reduction &amp; Management</div><span class="off-badge2 bd-purple">DRRM</span></div>
+    </div>
+    <div class="off-card">
+      <div class="av av-blue">BPLO</div>
+      <div><div class="off-name">Business Permits &amp; Licensing Office</div><div class="off-role">Business Registration &amp; Local Revenue</div><span class="off-badge2 bd-blue">Economic</span></div>
+    </div>
+  </section>
+
+  <!-- ══ BUDGET ══ -->
+  <section id="sec-budget" class="sec" role="tabpanel">
+    <h2 class="sec-h">2026 Budget</h2>
+    <p class="sec-s">I-tap ang kahit anong departamento para makita ang buong line-item breakdown hanggang centavo.</p>
+    <div class="total-band">
+      <div class="tb-label">Total Annual Budget · FY 2026</div>
+      <div class="tb-num">₱1,820,000,000.00</div>
+      <div class="tb-sub">National Tax Allotment + Local Revenue · DILG / DBM</div>
+    </div>
+    <div id="dept-wrap"></div>
+    <p class="budget-note">Figures based on DILG Full Disclosure Policy &amp; DBM Local Budget Memorandum No. 92, June 2025. Centavo-level amounts are estimated pro-rata allocations pending official LGU disclosure.</p>
+  </section>
+
+  <!-- ══ BARANGAY ══ -->
+  <section id="sec-barangay" class="sec" role="tabpanel">
+    <h2 class="sec-h">97 Barangays</h2>
+    <p class="sec-s">Hanapin ang iyong barangay at tingnan ang allocated development fund nito.</p>
+    <input class="brgy-search" type="search" placeholder="Hanapin ang barangay..." oninput="filterBrgy(this.value)" aria-label="Search barangay">
+    <p class="brgy-count" id="brgy-count"></p>
+    <div class="brgy-list" id="brgy-list"></div>
+  </section>
+
+  <!-- ══ FLAG IT ══ -->
+  <section id="sec-report" class="sec" role="tabpanel">
+    <h2 class="sec-h">Flag It</h2>
+    <p class="sec-s">I-report ang proyektong wala, hindi tapos, o kahina-hinalang gastos ng lungsod.</p>
+    <div class="flag-stats">
+      <div class="fstat"><div class="fstat-n" style="color:var(--ph-red)">24</div><div class="fstat-l">Nai-report</div></div>
+      <div class="fstat"><div class="fstat-n" style="color:var(--ph-blue)">8</div><div class="fstat-l">Sinisiyasat</div></div>
+      <div class="fstat"><div class="fstat-n" style="color:#27500A">3</div><div class="fstat-l">Naresolba</div></div>
+    </div>
+    <button class="flag-btn"><span class="fdot dot-r"></span>Ghost project — listed pero wala talaga<span class="fcnt">Pinaka-common</span></button>
+    <button class="flag-btn"><span class="fdot dot-y"></span>Hindi tapos — huminto sa kalagitnaan</button>
+    <button class="flag-btn"><span class="fdot dot-b"></span>Hindi nakarating sa benepisyaryo</button>
+    <button class="flag-btn"><span class="fdot dot-r"></span>Sobrang mahal na kontrata</button>
+    <div class="rep-box">
+      <p class="rep-title">Mag-submit ng ulat</p>
+      <p class="rep-label">Uri ng problema</p>
+      <select class="rep-sel" id="rep-cat">
+        <option>Ghost project</option>
+        <option>Hindi tapos na gawa</option>
+        <option>Maling paggamit ng pondo</option>
+        <option>Sobrang mahal na kontrata</option>
+        <option>Iba pa</option>
+      </select>
+      <p class="rep-label">Barangay</p>
+      <select class="rep-sel" id="rep-brgy" aria-label="Piliin ang barangay"></select>
+      <p class="rep-label">Ilarawan ang problema</p>
+      <textarea class="rep-inp" id="rep-desc" placeholder="Ano ang nangyari? Lugar, petsa, o pangalan ng proyekto..."></textarea>
+      <button class="sub-btn" onclick="submitReport()">Isumite ang Ulat</button>
+      <div class="ok-msg" id="ok-msg">✓ Salamat! Natanggap na ang iyong ulat. Ire-review ito ng aming koponan at irereport sa DILG/COA kung kinakailangan.</div>
+    </div>
+  </section>
+
+  <!-- ══ GET APP ══ -->
+  <section id="sec-download" class="sec" role="tabpanel">
+    <h2 class="sec-h">I-publish sa GitHub Pages</h2>
+    <p class="sec-s">Sundan ang mga hakbang na ito para maging live ang Saan Napunta? — libre at libre para sa lahat.</p>
+
+    <div class="app-hero">
+      <div class="app-h">3 Steps to Go Live</div>
+      <div class="app-s">GitHub Pages · Free Forever · No Credit Card</div>
+    </div>
+
+    <ol class="step-list">
+      <li>
+        <div>
+          <strong>Mag-login sa GitHub</strong> at gumawa ng bagong repository.<br>
+          Pangalanan ito ng:
+          <div class="step-code">saan-napunta</div>
+          I-set bilang <strong>Public</strong> at i-click ang "Create repository."
+        </div>
+      </li>
+      <li>
+        <div>
+          I-upload ang lahat ng files sa loob ng folder na ito (index.html, manifest.json, sw.js, icons/, images/).
+          I-click ang <strong>"Upload files"</strong> sa iyong repository.
+        </div>
+      </li>
+      <li>
+        <div>
+          Pumunta sa <strong>Settings → Pages</strong> ng iyong repository.
+          Sa "Branch," piliin ang <code>main</code> at i-click ang <strong>Save</strong>.<br>
+          Ang iyong live URL ay magiging:
+          <div class="step-code">https://[iyong-username].github.io/saan-napunta</div>
+        </div>
+      </li>
+    </ol>
+
+    <div class="roadmap">
+      <div class="rm-head">Development Roadmap</div>
+      <div class="rm-item"><span class="rm-phase ph-done">Done</span><div><div class="rm-text">Phase 1 — Web App MVP</div><div class="rm-sub">Officials, Budget breakdown, Barangay tracker, Flag It</div></div></div>
+      <div class="rm-item"><span class="rm-phase ph-done">Done</span><div><div class="rm-text">Phase 2 — PWA &amp; Offline Mode</div><div class="rm-sub">Installable from browser, works without internet</div></div></div>
+      <div class="rm-item"><span class="rm-phase ph-now">Next</span><div><div class="rm-text">Phase 3 — Live DILG Data Feed</div><div class="rm-sub">Auto-pull from Full Disclosure Policy portal quarterly</div></div></div>
+      <div class="rm-item"><span class="rm-phase ph-next">Future</span><div><div class="rm-text">Phase 4 — Android &amp; iOS Apps</div><div class="rm-sub">Free on Play Store &amp; App Store, push notifications</div></div></div>
+      <div class="rm-item"><span class="rm-phase ph-next">Future</span><div><div class="rm-text">Phase 5 — All Cavite LGUs</div><div class="rm-sub">Bacoor, Dasmariñas, Gen. Trias, Kawit &amp; more</div></div></div>
+    </div>
+
+    <p class="disc">Independent civic technology project. Hindi kami kaakibat ng City Government of Imus. Lahat ng datos ay mula sa pampublikong pagsisiwalat ng gobyerno (DILG FDP, DBM, COA).</p>
+  </section>
+
+</div><!-- /#app -->
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  <p>I-install ang <strong>Saan Napunta?</strong> sa iyong phone — libre at offline-ready!</p>
+  <button id="install-btn">I-install</button>
+  <button class="dismiss" id="dismiss-btn">✕</button>
+</div>
+
+<script>
+/* ══ DATA ══ */
+const TOTAL = 1820000000, POP = 481949;
+
+const councilors = [
+  { name:'Hon. Shernan S. Jaro',         file:'councilor-jaro.jpg',      init:'SJ', committee:'Finance, Budget & Appropriations' },
+  { name:'Hon. Lloren D. Saquilayan',    file:'councilor-yen.jpg',       init:'LS', committee:'Social Services, Family, Women & Children' },
+  { name:'Hon. Larry Boy S. Nato',       file:'councilor-nato.jpg',      init:'LN', committee:'Games, Franchise & Transportation' },
+  { name:'Hon. Jogie Lyn L. Maliksi',   file:'councilor-maliksi.jpg',   init:'JM', committee:'Tourism & Culture' },
+  { name:'Hon. Dennis T. Lacson',        file:'councilor-lacson.jpg',    init:'DL', committee:'Land Utilization, Zoning & Housing' },
+  { name:'Hon. Darwin M. Remulla',       file:'councilor-remulla.jpg',   init:'DR', committee:'Agriculture & Environment' },
+  { name:'Hon. Mark Anthony P. Villanueva',file:'councilor-villanueva.jpg',init:'MV',committee:'Trade, Commerce & Industry' },
+  { name:'Hon. Sherwin L. Comia',        file:'councilor-comia.jpg',     init:'SC', committee:'Public Works & Infrastructure' },
+  { name:'Hon. Peter Emmanuel C. Lara',  file:'councilor-lara.jpg',      init:'PL', committee:'Ordinances, Rules & Legal Matters' },
+  { name:'Hon. Enzo Gaston A. Asistio',  file:'councilor-asistio.jpg',   init:'EA', committee:'Health, Nutrition & Sanitation' },
+  { name:'Hon. Gregorio M. Ocampo Jr.',  file:'councilor-ocampo.jpg',    init:'GO', committee:'Education' },
+  { name:'Hon. David Sapitan Jr.',       file:'councilor-sapitan.jpg',   init:'DS', committee:'Cooperatives, Livelihood & Elderly' },
+];
+
+const depts = [
+  { name:'Infrastructure & Public Works', icon:'🏗️', ac:'#0038A8', alloc:582000000, tc:'#E6F1FB', tt:'#0C447C',
+    items:[
+      { name:'Road Concreting & Repair Program',       tag:'Roads',      pct:28, amt:162960000, c:'.00' },
+      { name:'Flood Control & Drainage Systems',       tag:'Flood',      pct:22, amt:128040000, c:'.00' },
+      { name:'Barangay Infrastructure Projects (BIP)', tag:'Barangay',   pct:18, amt:104760000, c:'.75' },
+      { name:'Public Market Maintenance & Upgrades',   tag:'Market',     pct:12, amt:69840000,  c:'.50' },
+      { name:'Street Lighting & Electrical Works',     tag:'Electrical', pct:10, amt:58200000,  c:'.25' },
+      { name:'Government Buildings & Facilities',      tag:'Buildings',  pct:6,  amt:34920000,  c:'.00' },
+      { name:'Engineering Personnel & Operations',     tag:'Admin',      pct:4,  amt:23280000,  c:'.50' },
+    ]},
+  { name:'Health Services', icon:'🏥', ac:'#CE1126', alloc:324000000, tc:'#FCEBEB', tt:'#791F1F',
+    items:[
+      { name:'City Health Office Operations & Staff',  tag:'Personnel',  pct:30, amt:97200000,  c:'.00' },
+      { name:'Rural Health Unit (RHU) Programs',       tag:'RHU',        pct:22, amt:71280000,  c:'.75' },
+      { name:'Medicine & Supplies Procurement',        tag:'Medicines',  pct:20, amt:64800000,  c:'.50' },
+      { name:'PhilHealth & Health Insurance Subsidy',  tag:'Insurance',  pct:14, amt:45360000,  c:'.25' },
+      { name:'Barangay Health Workers (BHW) Stipends', tag:'BHW',        pct:8,  amt:25920000,  c:'.00' },
+      { name:'COVID & Epidemic Response Fund',         tag:'Emergency',  pct:6,  amt:19440000,  c:'.00' },
+    ]},
+  { name:'Education & Scholarships', icon:'🎓', ac:'#27500A', alloc:255000000, tc:'#EAF3DE', tt:'#27500A',
+    items:[
+      { name:'City Scholarship Program (College)',     tag:'Scholars',   pct:35, amt:89250000,  c:'.00' },
+      { name:'Special Education Fund (SEF)',           tag:'SEF',        pct:28, amt:71400000,  c:'.50' },
+      { name:'School Buildings & Classrooms',          tag:'Infra',      pct:18, amt:45900000,  c:'.25' },
+      { name:'Educational Assistance & Vouchers',      tag:'Vouchers',   pct:12, amt:30600000,  c:'.75' },
+      { name:'Literacy & Technical-Voc Programs',      tag:'TESDA',      pct:7,  amt:17850000,  c:'.00' },
+    ]},
+  { name:'Social Welfare & Dev\'t', icon:'🤝', ac:'#854F0B', alloc:218000000, tc:'#FAEEDA', tt:'#633806',
+    items:[
+      { name:'4Ps (Pantawid Pamilyang Pilipino)',      tag:'4Ps',        pct:30, amt:65400000,  c:'.00' },
+      { name:'Senior Citizens Affairs & Benefits',     tag:'Senior',     pct:25, amt:54500000,  c:'.50' },
+      { name:'Persons with Disabilities (PWD)',        tag:'PWD',        pct:18, amt:39240000,  c:'.25' },
+      { name:'Women & Children Welfare (VAWC)',        tag:'VAWC',       pct:14, amt:30520000,  c:'.75' },
+      { name:'Livelihood & Skills Training',           tag:'Livelihood', pct:8,  amt:17440000,  c:'.00' },
+      { name:'Emergency Assistance Fund',              tag:'Emergency',  pct:5,  amt:10900000,  c:'.00' },
+    ]},
+  { name:'General Government Services', icon:'🏛️', ac:'#534AB7', alloc:182000000, tc:'#EEEDFE', tt:'#3C3489',
+    items:[
+      { name:'Personnel Services (Salaries & Benefits)',tag:'Salaries',  pct:55, amt:100100000, c:'.00' },
+      { name:'City Hall Operations & Utilities',       tag:'Operations', pct:20, amt:36400000,  c:'.50' },
+      { name:'Office Supplies & Equipment',            tag:'Supplies',   pct:12, amt:21840000,  c:'.25' },
+      { name:'Legal Services & City Attorney',         tag:'Legal',      pct:8,  amt:14560000,  c:'.75' },
+      { name:'Audit & Compliance Activities',          tag:'Audit',      pct:5,  amt:9100000,   c:'.00' },
+    ]},
+  { name:'Disaster Risk Reduction', icon:'🌧️', ac:'#185FA5', alloc:127000000, tc:'#E6F1FB', tt:'#0C447C',
+    items:[
+      { name:'LDRRMF — Local Disaster Risk Reduction', tag:'LDRRMF',    pct:60, amt:76200000,  c:'.00' },
+      { name:'Emergency Equipment & Rescue Tools',     tag:'Equipment',  pct:20, amt:25400000,  c:'.50' },
+      { name:'Evacuation Centers Maintenance',         tag:'Evacuation', pct:12, amt:15240000,  c:'.25' },
+      { name:'Community Preparedness & Training',      tag:'Training',   pct:8,  amt:10160000,  c:'.00' },
+    ]},
+  { name:'Economic Enterprise', icon:'📊', ac:'#3C3489', alloc:73000000, tc:'#EEEDFE', tt:'#26215C',
+    items:[
+      { name:'Public Market Revenue Operations',       tag:'Market',     pct:45, amt:32850000,  c:'.00' },
+      { name:'Business Permits & Licensing Office',    tag:'BPLO',       pct:30, amt:21900000,  c:'.50' },
+      { name:'Tourism & Local Economic Dev\'t',        tag:'Tourism',    pct:25, amt:18250000,  c:'.00' },
+    ]},
+  { name:'Other Appropriations', icon:'📋', ac:'#5F5E5A', alloc:59000000, tc:'#F1EFE8', tt:'#444441',
+    items:[
+      { name:'Calamity & Contingency Reserve',         tag:'Reserve',    pct:40, amt:23600000,  c:'.00' },
+      { name:'Confidential & Intelligence Fund',       tag:'CIF',        pct:30, amt:17700000,  c:'.00' },
+      { name:'Gender & Development (GAD) Fund',        tag:'GAD',        pct:20, amt:11800000,  c:'.00' },
+      { name:'Miscellaneous & Supplemental',           tag:'Misc',       pct:10, amt:5900000,   c:'.00' },
+    ]},
+];
+
+const barangays = [
+  {name:'Alapan I-A',pop:8420,fund:4.2,st:'ok'},{name:'Alapan I-B',pop:6130,fund:3.1,st:'ok'},
+  {name:'Alapan I-C',pop:7890,fund:3.9,st:'ok'},{name:'Alapan II-A',pop:5400,fund:2.7,st:'ok'},
+  {name:'Alapan II-B',pop:4200,fund:2.1,st:'mid'},{name:'Buhay na Tubig',pop:9100,fund:4.6,st:'ok'},
+  {name:'Bucandala I',pop:6700,fund:3.4,st:'ok'},{name:'Bucandala II',pop:5200,fund:2.6,st:'mid'},
+  {name:'Bucandala III',pop:4800,fund:2.4,st:'ok'},{name:'Bucandala IV',pop:3900,fund:2.0,st:'ok'},
+  {name:'Bucandala V',pop:3200,fund:1.6,st:'mid'},{name:'Carsadang Bago I',pop:7600,fund:3.8,st:'ok'},
+  {name:'Carsadang Bago II',pop:6100,fund:3.1,st:'ok'},{name:'Malagasang I-A',pop:8900,fund:4.5,st:'ok'},
+  {name:'Malagasang I-B',pop:7400,fund:3.7,st:'ok'},{name:'Malagasang I-C',pop:6800,fund:3.4,st:'mid'},
+  {name:'Malagasang I-D',pop:5900,fund:3.0,st:'ok'},{name:'Malagasang I-E',pop:5100,fund:2.6,st:'ok'},
+  {name:'Malagasang I-F',pop:4700,fund:2.4,st:'ok'},{name:'Malagasang I-G',pop:4300,fund:2.2,st:'mid'},
+  {name:'Malagasang II-A',pop:7200,fund:3.6,st:'ok'},{name:'Malagasang II-B',pop:6400,fund:3.2,st:'ok'},
+  {name:'Malagasang II-C',pop:5600,fund:2.8,st:'ok'},{name:'Malagasang II-D',pop:4900,fund:2.5,st:'ok'},
+  {name:'Malagasang II-E',pop:4200,fund:2.1,st:'mid'},{name:'Maharlika',pop:9800,fund:4.9,st:'ok'},
+  {name:'Medicion I-A',pop:7100,fund:3.6,st:'ok'},{name:'Medicion I-B',pop:6300,fund:3.2,st:'ok'},
+  {name:'Medicion I-C',pop:5500,fund:2.8,st:'ok'},{name:'Medicion I-D',pop:4800,fund:2.4,st:'mid'},
+  {name:'Medicion I-E',pop:4100,fund:2.1,st:'ok'},{name:'Medicion I-F',pop:3600,fund:1.8,st:'ok'},
+  {name:'Medicion II-A',pop:8200,fund:4.1,st:'ok'},{name:'Medicion II-B',pop:7100,fund:3.6,st:'ok'},
+  {name:'Medicion II-C',pop:6200,fund:3.1,st:'ok'},{name:'Medicion II-D',pop:5400,fund:2.7,st:'mid'},
+  {name:'Medicion II-E',pop:4700,fund:2.4,st:'ok'},{name:'Medicion II-F',pop:4000,fund:2.0,st:'ok'},
+  {name:'Poblacion I-A',pop:6100,fund:3.1,st:'ok'},{name:'Poblacion I-B',pop:5400,fund:2.7,st:'ok'},
+  {name:'Poblacion I-C',pop:4800,fund:2.4,st:'ok'},{name:'Poblacion II-A',pop:7200,fund:3.6,st:'ok'},
+  {name:'Poblacion II-B',pop:6400,fund:3.2,st:'mid'},{name:'Poblacion III-A',pop:5700,fund:2.9,st:'ok'},
+  {name:'Poblacion III-B',pop:5000,fund:2.5,st:'ok'},{name:'Poblacion IV-A',pop:4400,fund:2.2,st:'ok'},
+  {name:'Poblacion IV-B',pop:3800,fund:1.9,st:'mid'},{name:'Tanzang Luma I',pop:8700,fund:4.4,st:'ok'},
+  {name:'Tanzang Luma II',pop:7600,fund:3.8,st:'ok'},{name:'Tanzang Luma III',pop:6500,fund:3.3,st:'ok'},
+  {name:'Tanzang Luma IV',pop:5700,fund:2.9,st:'mid'},{name:'Tanzang Luma V',pop:4900,fund:2.5,st:'ok'},
+  {name:'Tanzang Luma VI',pop:4200,fund:2.1,st:'ok'},{name:'Toclong I-A',pop:6900,fund:3.5,st:'ok'},
+  {name:'Toclong I-B',pop:6100,fund:3.1,st:'ok'},{name:'Toclong I-C',pop:5300,fund:2.7,st:'ok'},
+  {name:'Toclong II-A',pop:4600,fund:2.3,st:'mid'},{name:'Toclong II-B',pop:3900,fund:2.0,st:'ok'},
+];
+
+/* ══ RENDER COUNCILORS ══ */
+const cgEl = document.getElementById('councilor-grid');
+councilors.forEach(c => {
+  const colors = ['#0038A8','#CE1126','#27500A','#854F0B','#534AB7','#185FA5'];
+  const bg = colors[councilors.indexOf(c) % colors.length];
+  cgEl.innerHTML += `
+  <div class="cc">
+    <div class="cc-photo-wrap" style="background:${bg}">
+      <img class="cc-photo" src="images/officials/${c.file}" alt="${c.name}"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="cc-photo-fallback" style="background:${bg};display:none">${c.init}</div>
+    </div>
+    <div class="cc-info">
+      <div class="cc-name">${c.name}</div>
+      <div class="cc-committee">${c.committee}</div>
+    </div>
+  </div>`;
+});
+
+/* ══ RENDER BUDGET ══ */
+const wrap = document.getElementById('dept-wrap');
+function fmt(n, c) { return '₱' + n.toLocaleString('en-PH') + c; }
+
+depts.forEach(d => {
+  const pct = Math.round(d.alloc / TOTAL * 100);
+  const card = document.createElement('div');
+  card.className = 'dept-card';
+  card.style.setProperty('--ac', d.ac);
+
+  const items = d.items.map(it => `
+    <div class="li">
+      <div class="li-l">
+        <div class="li-name">${it.name}</div>
+        <span class="li-tag" style="background:${d.tc};color:${d.tt}">${it.tag}</span>
+        <div class="li-mini-bar-wrap"><div class="li-mini-bar" style="width:${it.pct}%;background:${d.ac}88"></div></div>
+      </div>
+      <div class="li-r">
+        <div class="li-amt" style="color:${d.ac}">${fmt(it.amt, it.c)}</div>
+        <div class="li-meta">₱${(it.amt / POP).toFixed(2)} / Imuseño</div>
+        <div class="li-meta">${it.pct}% ng dept.</div>
+      </div>
+    </div>`).join('');
+
+  card.innerHTML = `
+    <div class="dept-hd" onclick="toggleDept(this)">
+      <div class="d-icon" style="background:${d.ac}18">${d.icon}</div>
+      <div class="d-main">
+        <div class="d-name">${d.name}</div>
+        <div class="d-alloc">${fmt(d.alloc, '.00')} allocated</div>
+        <div class="d-bar-wrap"><div class="d-bar" style="width:${Math.min(100, pct * 2.8)}%;background:${d.ac}"></div></div>
+      </div>
+      <div class="d-right">
+        <div class="d-pct" style="color:${d.ac}">${pct}%</div>
+        <div class="chev" style="color:${d.ac}">▼</div>
+      </div>
+    </div>
+    <div class="dept-body">
+      <p class="sub-hd">Line-item breakdown</p>
+      ${items}
+      <div class="d-total-row" style="background:${d.ac}12">
+        <span style="font-size:11px;font-weight:500;color:${d.ac}">Department Total</span>
+        <span style="font-size:12px;font-weight:500;color:${d.ac}">${fmt(d.alloc, '.00')}</span>
+      </div>
+      <div class="per-cap-row">
+        <span style="font-size:10px;color:var(--muted)">Cost per Imuseño (481,949 pop.)</span>
+        <span style="font-size:11px;font-weight:500;color:var(--muted)">₱${(d.alloc / POP).toFixed(2)}</span>
+      </div>
+    </div>`;
+  wrap.appendChild(card);
+});
+
+function toggleDept(hd) {
+  const card = hd.closest('.dept-card');
+  const was = card.classList.contains('open');
+  document.querySelectorAll('.dept-card.open').forEach(c => c.classList.remove('open'));
+  if (!was) card.classList.add('open');
+}
+
+/* ══ BARANGAY DROPDOWN ══ */
+const repBrgy = document.getElementById('rep-brgy');
+barangays.forEach(b => { repBrgy.innerHTML += `<option>${b.name}</option>`; });
+repBrgy.innerHTML += '<option>Hindi alam / Iba pa</option>';
+
+function renderBrgy(list) {
+  document.getElementById('brgy-count').textContent = `Nagpapakita ng ${list.length} barangay`;
+  document.getElementById('brgy-list').innerHTML = list.map(b => `
+    <div class="bi">
+      <div class="bi-top">
+        <div class="bi-name">Brgy. ${b.name}</div>
+        <div class="bi-fund">₱${b.fund.toFixed(1)}M</div>
+      </div>
+      <div class="bi-pop">Est. ${b.pop.toLocaleString()} residente</div>
+      <div class="bi-row">
+        <span class="bi-status ${b.st === 'ok' ? 'st-ok' : 'st-mid'}">${b.st === 'ok' ? 'Pondo nalabas' : 'Hinihintay pa'}</span>
+        <span style="font-size:10px;color:var(--muted)">₱${(b.fund * 1e6 / b.pop).toFixed(2)} / tao</span>
+      </div>
+    </div>`).join('');
+}
+renderBrgy(barangays);
+
+function filterBrgy(v) {
+  renderBrgy(barangays.filter(b => b.name.toLowerCase().includes(v.toLowerCase())));
+}
+
+/* ══ TABS ══ */
+function showTab(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  btn.classList.add('on');
+  window.scrollTo(0, 0);
+}
+
+/* ══ REPORT ══ */
+function submitReport() {
+  if (!document.getElementById('rep-desc').value.trim()) {
+    alert('Mangyaring ilarawan ang problema.'); return;
+  }
+  document.getElementById('ok-msg').style.display = 'block';
+  document.getElementById('rep-desc').value = '';
+  setTimeout(() => { document.getElementById('ok-msg').style.display = 'none'; }, 5000);
+}
+
+/* ══ PWA INSTALL PROMPT ══ */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+document.getElementById('install-btn').addEventListener('click', () => {
+  if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+  document.getElementById('install-banner').style.display = 'none';
+});
+document.getElementById('dismiss-btn').addEventListener('click', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
+
+/* ══ SERVICE WORKER ══ */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log('SW registered'))
+    .catch(err => console.warn('SW error:', err));
+}
+</script>
+</body>
+</html>
